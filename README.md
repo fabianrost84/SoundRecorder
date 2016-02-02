@@ -3,8 +3,11 @@ Easy Sound Recorder
 
 <p>A simple sound recording app implementing Material Design.</p>
 
-[![Android app on Google Play](https://developer.android.com/images/brand/en_app_rgb_wo_60.png)](https://play.google.com/store/apps/details?id=com.danielkim.soundrecorder) [![Android app on F-Droid](https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Get_it_on_F-Droid.svg/200px-Get_it_on_F-Droid.svg.png)](https://f-droid.org/repository/browse/?fdid=com.danielkim.soundrecorder)
+<p>This is my personal fork where I changed two things:</p>
 
-Screenshots:
+* changed the default storage path to "/storage/sdcard1/SoundRecorder" such that files are stored to my external SD card on my Motorola Moto E (and not to the emulated SD card)
+* changed the default Sampling rate to 44.1 kHz and the default Bitrate to 96000 bps for higher quality audio recording
 
-![alt tag](http://i.imgur.com/4W5fj0Il.png) ![alt tag](http://i.imgur.com/7ggcFQzl.png) ![alt tag](http://i.imgur.com/RqD8S3Il.png) ![alt tag](http://i.imgur.com/H6ScO21l.png)
+<p>In the future I would like to have settings to change the default storage path, sampling rate and bitrate.</p>
+
+<p>For the original app check out https://github.com/dkim0419/SoundRecorder</p>
