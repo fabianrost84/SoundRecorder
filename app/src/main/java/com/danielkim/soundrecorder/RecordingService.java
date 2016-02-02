@@ -107,7 +107,7 @@ public class RecordingService extends Service {
 
             mFileName = getString(R.string.default_file_name)
                     + " #" + (mDatabase.getCount() + count) + ".mp4";
-            mFilePath = Environment.getExternalStorageDirectory().getAbsolutePath();
+            mFilePath = "/storage/sdcard1/";
             mFilePath += "/SoundRecorder/" + mFileName;
 
             f = new File(mFilePath);
