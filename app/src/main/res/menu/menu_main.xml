@@ -9,4 +9,9 @@
         android:title="@string/action_licenses"
         android:orderInCategory="100"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_fabianrost"
+        android:title="Fabian Rost"
+        android:orderInCategory="101"
+        app:showAsAction="never" />
 </menu>
