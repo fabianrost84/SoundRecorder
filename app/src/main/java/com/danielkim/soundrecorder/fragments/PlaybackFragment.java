@@ -23,14 +23,10 @@ import com.melnykov.fab.FloatingActionButton;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by Daniel on 1/1/2015.
- */
 public class PlaybackFragment extends DialogFragment{
 
     private static final String LOG_TAG = "PlaybackFragment";
-
-    private static final String ARG_ITEM = "recording_item";
+    private static final String ARG_ITEM = "file_path";
     private RecordingItem item;
 
     private Handler mHandler = new Handler();
@@ -43,7 +39,6 @@ public class PlaybackFragment extends DialogFragment{
     private TextView mFileNameTextView = null;
     private TextView mFileLengthTextView = null;
 
-    //stores whether or not the mediaplayer is currently playing audio
     private boolean isPlaying = false;
 
     //stores minutes and seconds of the length of the file.
@@ -53,17 +48,17 @@ public class PlaybackFragment extends DialogFragment{
     public PlaybackFragment newInstance(RecordingItem item) {
         PlaybackFragment f = new PlaybackFragment();
         Bundle b = new Bundle();
-        b.putParcelable(ARG_ITEM, item);
+        b.putString(ARG_ITEM, item.getFilePath());
         f.setArguments(b);
-
         return f;
     }
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        item = getArguments().getParcelable(ARG_ITEM);
-
+        String filePath = getArguments().getString(ARG_ITEM);
+        item = new RecordingItem(filePath);
         long itemDuration = item.getLength();
         minutes = TimeUnit.MILLISECONDS.toMinutes(itemDuration);
         seconds = TimeUnit.MILLISECONDS.toSeconds(itemDuration)
@@ -190,18 +185,15 @@ public class PlaybackFragment extends DialogFragment{
         }
     }
 
-    // Play start/stop
     private void onPlay(boolean isPlaying){
         if (!isPlaying) {
-            //currently MediaPlayer is not playing audio
             if(mMediaPlayer == null) {
                 startPlaying(); //start from beginning
             } else {
-                resumePlaying(); //resume the currently paused MediaPlayer
+                resumePlaying();
             }
 
         } else {
-            //pause the MediaPlayer
             pausePlaying();
         }
     }

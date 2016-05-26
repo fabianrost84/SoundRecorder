@@ -40,21 +40,6 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/btnPause"
-        android:drawableLeft="@drawable/ic_media_pause"
-        android:text="@string/pause_recording_button"
-        android:textAllCaps="true"
-        android:fontFamily="sans-serif-condensed"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="10dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginStart="10dp"/>
-
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -62,7 +47,6 @@
         android:text="@string/record_prompt"
         android:textStyle="bold"
         android:textSize="17sp"
-        android:textColor="#000000"
         android:fontFamily="sans-serif-condensed"
         android:layout_above="@+id/btnRecord"
         android:layout_centerHorizontal="true"

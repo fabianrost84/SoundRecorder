@@ -15,7 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/primary"
-        android:textColor="@color/white"
+        android:textColor="@color/primary_text_light"
         android:elevation="4dp"
         app:pstsIndicatorColor="@color/tab_strip"
         app:pstsIndicatorHeight="@dimen/tab_indicator_height"

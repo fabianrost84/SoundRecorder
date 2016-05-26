@@ -4,10 +4,12 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Environment;
+import android.os.FileObserver;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,47 +17,65 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.text.format.DateUtils;
 
-import com.danielkim.soundrecorder.DBHelper;
 import com.danielkim.soundrecorder.R;
 import com.danielkim.soundrecorder.RecordingItem;
 import com.danielkim.soundrecorder.fragments.PlaybackFragment;
-import com.danielkim.soundrecorder.listeners.OnDatabaseChangedListener;
 
 import java.io.File;
-import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
-/**
- * Created by Daniel on 12/29/2014.
- */
-public class FileViewerAdapter extends RecyclerView.Adapter<FileViewerAdapter.RecordingsViewHolder>
-    implements OnDatabaseChangedListener{
-
+public class FileViewerAdapter extends RecyclerView.Adapter<FileViewerAdapter.RecordingsViewHolder> {
     private static final String LOG_TAG = "FileViewerAdapter";
 
-    private DBHelper mDatabase;
-
-    RecordingItem item;
     Context mContext;
     LinearLayoutManager llm;
+
+    private FileObserver observer;
+    private String storagePath;
+    private ArrayList<RecordingItem> storage;
 
     public FileViewerAdapter(Context context, LinearLayoutManager linearLayoutManager) {
         super();
         mContext = context;
-        mDatabase = new DBHelper(mContext);
-        mDatabase.setOnDatabaseChangedListener(this);
+        storagePath = "/storage/sdcard1/" + context.getString(R.string.storage_dir);
+
+        observer = new FileObserver(storagePath) {
+            @Override
+            public void onEvent(int event, String file) {
+                if (file == null) return;
+                switch (event) {
+                    case FileObserver.DELETE:
+                    case FileObserver.MOVED_FROM:
+                        removedFile(file);
+                        break;
+                    case FileObserver.CREATE:
+                    case FileObserver.CLOSE_WRITE:
+                    case FileObserver.MOVED_TO:
+                        addedFile(file);
+                        break;
+                }
+            }
+        };
+        observer.startWatching();
+        File storageDir = new File(storagePath);
+
+        String filenames[] = storageDir.list();
+        storage = new ArrayList<>(filenames.length);
+        for (String filename : filenames) {
+            File r = new File(storagePath, filename);
+            storage.add(new RecordingItem(storagePath + "/" + filename));
+        }
+
         llm = linearLayoutManager;
     }
 
     @Override
     public void onBindViewHolder(final RecordingsViewHolder holder, int position) {
 
-        item = getItem(position);
+        RecordingItem item = storage.get(position);
         long itemDuration = item.getLength();
-
         long minutes = TimeUnit.MILLISECONDS.toMinutes(itemDuration);
         long seconds = TimeUnit.MILLISECONDS.toSeconds(itemDuration)
                 - TimeUnit.MINUTES.toSeconds(minutes);
@@ -76,7 +96,7 @@ public class FileViewerAdapter extends RecyclerView.Adapter<FileViewerAdapter.Re
             public void onClick(View view) {
                 try {
                     PlaybackFragment playbackFragment =
-                            new PlaybackFragment().newInstance(getItem(holder.getPosition()));
+                            new PlaybackFragment().newInstance(storage.get(holder.getLayoutPosition()));
 
                     FragmentTransaction transaction = ((FragmentActivity) mContext)
                             .getSupportFragmentManager()
@@ -94,12 +114,11 @@ public class FileViewerAdapter extends RecyclerView.Adapter<FileViewerAdapter.Re
             @Override
             public boolean onLongClick(View v) {
 
-                ArrayList<String> entrys = new ArrayList<String>();
-                entrys.add(mContext.getString(R.string.dialog_file_rename));
-                entrys.add(mContext.getString(R.string.dialog_file_delete));
+                ArrayList<String> entries = new ArrayList<>(2);
+                entries.add(mContext.getString(R.string.dialog_file_rename));
+                entries.add(mContext.getString(R.string.dialog_file_delete));
 
-                final CharSequence[] items = entrys.toArray(new CharSequence[entrys.size()]);
-
+                final CharSequence[] items = entries.toArray(new CharSequence[entries.size()]);
 
                 // File delete confirm
                 AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
@@ -107,9 +126,9 @@ public class FileViewerAdapter extends RecyclerView.Adapter<FileViewerAdapter.Re
                 builder.setItems(items, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int item) {
                         if (item == 0) {
-                            renameFileDialog(holder.getPosition());
+                            renameFileDialog(holder.getLayoutPosition());
                         } else if (item == 1) {
-                            deleteFileDialog(holder.getPosition());
+                            deleteFileDialog(holder.getLayoutPosition());
                         }
                     }
                 });
@@ -158,75 +177,65 @@ public class FileViewerAdapter extends RecyclerView.Adapter<FileViewerAdapter.Re
 
     @Override
     public int getItemCount() {
-        return mDatabase.getCount();
+        return storage.size();
     }
 
-    public RecordingItem getItem(int position) {
-        return mDatabase.getItemAt(position);
-    }
-
-    @Override
-    public void onNewDatabaseEntryAdded() {
+    public void addedFile(String filename) {
         //item added to top of the list
+        storage.add(new RecordingItem(storagePath + "/" + filename));
         notifyItemInserted(getItemCount() - 1);
         llm.scrollToPosition(getItemCount() - 1);
     }
 
-    @Override
-    //TODO
-    public void onDatabaseEntryRenamed() {
+    public void removedFile(String filename) {
 
+        String fullPath = storagePath + "/" + filename;
+        for (int i = 0; i < storage.size(); i++) {
+            if (storage.get(i).getFilePath().equals(fullPath)) {
+                storage.remove(i);
+                notifyItemRemoved(i);
+                return;
+            }
+        }
     }
 
-    public void remove(int position) {
-        //remove item from database, recyclerview and storage
+    public void delete(int position) {
 
-        //delete file from storage
-        File file = new File(getItem(position).getFilePath());
+        String filepath = storage.get(position).getFilePath();
+        File file = new File(filepath);
+        String filename = file.getName();
         file.delete();
-
         Toast.makeText(
-            mContext,
-            String.format(
-                mContext.getString(R.string.toast_file_delete),
-                getItem(position).getName()
-            ),
-            Toast.LENGTH_SHORT
+                mContext,
+                String.format(
+                        mContext.getString(R.string.toast_file_delete),
+                        filename
+                ),
+                Toast.LENGTH_SHORT
         ).show();
-
-        mDatabase.removeItemWithId(getItem(position).getId());
-        notifyItemRemoved(position);
     }
 
-    //TODO
-    public void removeOutOfApp(String filePath) {
-        //user deletes a saved recording out of the application through another application
-    }
 
     public void rename(int position, String name) {
-        //rename a file
-
-        String mFilePath = "/storage/sdcard1/";
-        mFilePath += "/SoundRecorder/" + name;
+        String mFilePath = storagePath + "/" + name;
         File f = new File(mFilePath);
 
-        if (f.exists() && !f.isDirectory()) {
+        if (f.exists()) {
             //file name is not unique, cannot rename file.
             Toast.makeText(mContext,
                     String.format(mContext.getString(R.string.toast_file_exists), name),
                     Toast.LENGTH_SHORT).show();
 
         } else {
-            //file name is unique, rename file
-            File oldFilePath = new File(getItem(position).getFilePath());
-            oldFilePath.renameTo(f);
-            mDatabase.renameItem(getItem(position), name);
+            RecordingItem r = storage.get(position);
+            File new_f = new File(r.getFilePath());
+            new_f.renameTo(f);
+            r.setFilePath(mFilePath);
             notifyItemChanged(position);
         }
     }
 
     public void renameFileDialog (final int position) {
-        // File rename dialog
         AlertDialog.Builder renameFileBuilder = new AlertDialog.Builder(mContext);
 
         LayoutInflater inflater = LayoutInflater.from(mContext);
@@ -263,7 +272,6 @@ public class FileViewerAdapter extends RecyclerView.Adapter<FileViewerAdapter.Re
     }
 
     public void deleteFileDialog (final int position) {
-        // File delete confirm
         AlertDialog.Builder confirmDelete = new AlertDialog.Builder(mContext);
         confirmDelete.setTitle(mContext.getString(R.string.dialog_title_delete));
         confirmDelete.setMessage(mContext.getString(R.string.dialog_text_delete));
@@ -271,14 +279,7 @@ public class FileViewerAdapter extends RecyclerView.Adapter<FileViewerAdapter.Re
         confirmDelete.setPositiveButton(mContext.getString(R.string.dialog_action_yes),
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        try {
-                            //remove item from database, recyclerview, and storage
-                            remove(position);
-
-                        } catch (Exception e) {
-                            Log.e(LOG_TAG, "exception", e);
-                        }
-
+                        delete(position);
                         dialog.cancel();
                     }
                 });
