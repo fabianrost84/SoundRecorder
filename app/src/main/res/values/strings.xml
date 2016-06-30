@@ -23,9 +23,11 @@
     <string name="dialog_title_delete">Confirm Delete…</string>
     <string name="dialog_text_delete">Are you sure you would like to delete this file?</string>
     <string name="dialog_title_licenses">Open Source Licenses</string>
+    <string name="dialog_title_share">Share File</string>
     <string name="dialog_title_rename">Rename File</string>
     <string name="dialog_title_options">Options</string>
 
+    <string name="dialog_file_share">Share File</string>
     <string name="dialog_file_rename">Rename File</string>
     <string name="dialog_file_delete">Delete File</string>
     <string name="dialog_action_cancel">Cancel</string>
@@ -45,5 +47,7 @@
     <string name="hour_minute_default">00:00</string>
     <string name="recording_item">recording item</string>
     <string name="storage_dir">SoundRecorder</string>
+
+    <string name="send_to">Send to</string>
 
 </resources>
