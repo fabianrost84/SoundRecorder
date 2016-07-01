@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.LinkedHashSet;
+import java.util.Date;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -47,6 +48,7 @@ public class RecordingService extends Service {
 
     private LinkedHashSet<Intent> mIntends;
 
+    private static final SimpleDateFormat mFileFormat = new SimpleDateFormat("yyyy-MM-dd kk.mm.ss", Locale.getDefault());
 
     private long mStartingTimeMillis = -1;
     private boolean mRecording = false;
@@ -139,12 +141,11 @@ public class RecordingService extends Service {
     }
 
     public void setFileNameAndPath(){
-        int count = 0;
         File f;
 
         do{
-            count++;
-            mFileName = getString(R.string.default_file_name) + "-" + count + ".mp4";
+            mFileName = mFileFormat.format(new Date()) + ".mp4";
+
             mFilePath = "/storage/sdcard1/";
             mFilePath += "/" + getString(R.string.storage_dir) + "/" + mFileName;
 
